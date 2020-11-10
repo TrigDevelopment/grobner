@@ -21,7 +21,7 @@ struct Polynomial
 };
 
 /*
-  Определяет, равны ли полиномы a и b.
+  РћРїСЂРµРґРµР»СЏРµС‚, СЂР°РІРЅС‹ Р»Рё РїРѕР»РёРЅРѕРјС‹ a Рё b.
 */
 bool polynomialEqual(Polynomial const & a, Polynomial const & b)
 {
@@ -42,8 +42,8 @@ bool isMonomialLess(Monomial const & a, Monomial const & b)
 }
 
 /*
-  Определяет, отсортированы ли одночлены polynomial по убыванию.
-  Для этого необходимо, чтобы одночлены должны быть приведены.
+  РћРїСЂРµРґРµР»СЏРµС‚, РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅС‹ Р»Рё РѕРґРЅРѕС‡Р»РµРЅС‹ polynomial РїРѕ СѓР±С‹РІР°РЅРёСЋ.
+  Р”Р»СЏ СЌС‚РѕРіРѕ РЅРµРѕР±С…РѕРґРёРјРѕ, С‡С‚РѕР±С‹ РѕРґРЅРѕС‡Р»РµРЅС‹ РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РїСЂРёРІРµРґРµРЅС‹.
 */
 bool isSorted(Polynomial const & polynomial)
 {
@@ -51,8 +51,8 @@ bool isSorted(Polynomial const & polynomial)
 }
 
 /*
-  Возвращает старший одночлен. Так как все многочлены отсортированы,
-  то старшим одночлленом всегда будет первый одночлен.
+  Р’РѕР·РІСЂР°С‰Р°РµС‚ СЃС‚Р°СЂС€РёР№ РѕРґРЅРѕС‡Р»РµРЅ. РўР°Рє РєР°Рє РІСЃРµ РјРЅРѕРіРѕС‡Р»РµРЅС‹ РѕС‚СЃРѕСЂС‚РёСЂРѕРІР°РЅС‹,
+  С‚Рѕ СЃС‚Р°СЂС€РёРј РѕРґРЅРѕС‡Р»Р»РµРЅРѕРј РІСЃРµРіРґР° Р±СѓРґРµС‚ РїРµСЂРІС‹Р№ РѕРґРЅРѕС‡Р»РµРЅ.
 */
 Monomial getMajorMonomial(Polynomial const & polynomial)
 {
@@ -60,9 +60,9 @@ Monomial getMajorMonomial(Polynomial const & polynomial)
 }
 
 /*
-  Возвращает наименьшее общее частное monomial1 и monomial2.
-  monomial1 и monomial2 должны быть нормализованы,
-  то есть коэффициент при них должен быть равен 1.
+  Р’РѕР·РІСЂР°С‰Р°РµС‚ РЅР°РёРјРµРЅСЊС€РµРµ РѕР±С‰РµРµ С‡Р°СЃС‚РЅРѕРµ monomial1 Рё monomial2.
+  monomial1 Рё monomial2 РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅС‹,
+  С‚Рѕ РµСЃС‚СЊ РєРѕСЌС„С„РёС†РёРµРЅС‚ РїСЂРё РЅРёС… РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЂР°РІРµРЅ 1.
 */
 Monomial normalisedMonomialLeastCommonMultiple(
   Monomial const & monomial1, Monomial const & monomial2)
@@ -77,9 +77,9 @@ Monomial normalisedMonomialLeastCommonMultiple(
 }
 
 /*
-  Возвращает результат деления divisible на divisor. 
-  divisible и divisor должны быть нормализованы,
-  то есть коэффициент при них должен быть равен 1.
+  Р’РѕР·РІСЂР°С‰Р°РµС‚ СЂРµР·СѓР»СЊС‚Р°С‚ РґРµР»РµРЅРёСЏ divisible РЅР° divisor. 
+  divisible Рё divisor РґРѕР»Р¶РЅС‹ Р±С‹С‚СЊ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅС‹,
+  С‚Рѕ РµСЃС‚СЊ РєРѕСЌС„С„РёС†РёРµРЅС‚ РїСЂРё РЅРёС… РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ СЂР°РІРµРЅ 1.
 */
 Monomial normalisedMonomialDivide(Monomial const & divisible, Monomial const & divisor)
 {
