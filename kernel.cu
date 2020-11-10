@@ -1,0 +1,12 @@
+#include <iostream>
+#include <math.h>
+#include <assert.h>
+
+
+
+int main(void)
+{
+  assert(1 == 0);
+
+  return 0;
+}
