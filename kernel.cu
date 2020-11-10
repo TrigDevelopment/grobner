@@ -36,6 +36,20 @@ bool polynomialEqual(Polynomial const & a, Polynomial const & b)
   return true;
 }
 
+bool isMonomialLess(Monomial const & a, Monomial const & b)
+{
+  return false;
+}
+
+/*
+  Определяет, отсортированы ли одночлены polynomial по убыванию.
+  Для этого необходимо, чтобы одночлены должны быть приведены.
+*/
+bool isSorted(Polynomial const & polynomial)
+{
+  return false;
+}
+
 /*
   Возвращает старший одночлен. Так как все многочлены отсортированы,
   то старшим одночлленом всегда будет первый одночлен.
@@ -78,6 +92,39 @@ Monomial normalisedMonomialDivide(Monomial const & divisible, Monomial const & d
   return res;
 }
 
+Polynomial multiplyByNormalisedMonomial(Polynomial const & polynomial, Monomial const & monomial)
+{
+  assert(monomial.coefficient == 1);
+  auto res = polynomial;
+  for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
+    for (size_t i = 0; i < monomial.degrees.size(); ++i) {
+      res.monomials[monomialI].degrees[i] += monomial.degrees[i];
+    }
+  }
+  return res;
+}
+
+Polynomial generateRandomSortedPolynomial(int nVariables, int maxVariableDegree,
+  int maxPrime, int maxNMonomials) 
+{
+  return Polynomial{{}};
+}
+
+void outputPolynomial(Polynomial const & polynomial)
+{
+
+}
+
+void testIsMonomialLess()
+{
+  
+}
+
+void testIsSorted()
+{
+
+}
+
 void testNormalisedMonomialDivide()
 {
   auto divisible1 = Monomial{ std::vector<int>{2, 3}, 1 };
@@ -93,18 +140,6 @@ void testNormalisedMonomialDivide()
   auto expected3 = Monomial{ std::vector<int>{1, 2}, 1 };
   auto result3 = normalisedMonomialDivide(divisible1, divisor3);
   assert(monomialEqual(result3, expected3));
-}
-
-Polynomial multiplyByNormalisedMonomial(Polynomial const & polynomial, Monomial const & monomial)
-{
-  assert(monomial.coefficient == 1);
-  auto res = polynomial;
-  for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
-    for (size_t i = 0; i < monomial.degrees.size(); ++i) {
-      res.monomials[monomialI].degrees[i] += monomial.degrees[i];
-    }
-  }
-  return res;
 }
 
 void testMultiplyByNormalisedMonomial()
@@ -130,10 +165,27 @@ void testMultiplyByNormalisedMonomial()
   assert(polynomialEqual(result4, expected4));
 }
 
+void testGenerateRandomSortedPolynomial()
+{
+  for (size_t i = 0; i < 10; ++i)
+  {
+    auto poly = generateRandomSortedPolynomial(3, 5, 20, 5);
+    outputPolynomial(poly);
+  }
+  for (size_t i = 0; i < 100; ++i)
+  {
+    auto poly = generateRandomSortedPolynomial(32, 50, 20, 50);
+    assert(isSorted(poly));
+  }
+}
+
 void testAll() 
 {
+  testIsMonomialLess();
+  testIsSorted();
   testNormalisedMonomialDivide();
   testMultiplyByNormalisedMonomial();
+  testGenerateRandomSortedPolynomial();
 }
 
 int main(void)
