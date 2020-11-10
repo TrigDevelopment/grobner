@@ -20,6 +20,26 @@ struct Polynomial
   std::vector<Monomial> monomials;
 };
 
+/*
+  Определяет, равны ли полиномы a и b.
+*/
+bool polynomialEqual(Polynomial const & a, Polynomial const & b)
+{
+  if (a.monomials.size() != b.monomials.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < a.monomials.size(); ++i) {
+    if (!monomialEqual(a.monomials[i], b.monomials[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/*
+  Возвращает старший одночлен. Так как все многочлены отсортированы,
+  то старшим одночлленом всегда будет первый одночлен.
+*/
 Monomial getMajorMonomial(Polynomial const & polynomial)
 {
   return polynomial.monomials[0];
@@ -75,9 +95,45 @@ void testNormalisedMonomialDivide()
   assert(monomialEqual(result3, expected3));
 }
 
+Polynomial multiplyByNormalisedMonomial(Polynomial const & polynomial, Monomial const & monomial)
+{
+  assert(monomial.coefficient == 1);
+  auto res = polynomial;
+  for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
+    for (size_t i = 0; i < monomial.degrees.size(); ++i) {
+      res.monomials[monomialI].degrees[i] += monomial.degrees[i];
+    }
+  }
+  return res;
+}
+
+void testMultiplyByNormalisedMonomial()
+{
+  auto polynomial1 = Polynomial{{ Monomial{{1, 4}, 1} }};
+  auto monomial1 = Monomial{{1, 1}, 1};
+  auto expected1 = Polynomial{{ Monomial{{2, 5}, 1} }};
+  auto result1 = multiplyByNormalisedMonomial(polynomial1, monomial1);
+  assert(polynomialEqual(result1, expected1));
+  auto polynomial2 = Polynomial{{ Monomial{{3, 4}, 1}, Monomial{{1, 2}, 1} }};
+  auto expected2 = Polynomial{{ Monomial{{4, 5}, 1}, Monomial{{2, 3}, 1} }};
+  auto result2 = multiplyByNormalisedMonomial(polynomial2, monomial1);
+  assert(polynomialEqual(result2, expected2));
+  auto polynomial3 = Polynomial{{ Monomial{{0, 0}, 1} }};
+  auto monomial3 = Monomial{{0, 0}, 1};
+  auto expected3 = Polynomial{{ Monomial{{0, 0}, 1} }};
+  auto result3 = multiplyByNormalisedMonomial(polynomial3, monomial3);
+  assert(polynomialEqual(result3, expected3));
+  auto polynomial4 = Polynomial{{}};
+  auto monomial4 = Monomial{{5}, 1};
+  auto expected4 = Polynomial{{}};
+  auto result4 = multiplyByNormalisedMonomial(polynomial4, monomial4);
+  assert(polynomialEqual(result4, expected4));
+}
+
 void testAll() 
 {
   testNormalisedMonomialDivide();
+  testMultiplyByNormalisedMonomial();
 }
 
 int main(void)
