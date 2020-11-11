@@ -37,14 +37,15 @@ bool polynomialEqual(Polynomial const& a, Polynomial const& b)
     return true;
 }
 
-bool isMonomialLess(Monomial const& a, Monomial const& b)
+bool isMonomialGreater(Monomial const& a, Monomial const& b)
 {
+    assert(a.degrees.size() == b.degrees.size());
     for (size_t i = 0; i < a.degrees.size(); ++i) {
-        if (a.degrees[i] < b.degrees[i]) {
-            return false;
-        }
-        else if (a.degrees[i] > b.degrees[i]) {
+        if (a.degrees[i] > b.degrees[i]) {
             return true;
+        }
+        else if (a.degrees[i] < b.degrees[i]) {
+            return false;
         }
     }
     return false;
@@ -57,7 +58,7 @@ bool isMonomialLess(Monomial const& a, Monomial const& b)
 bool isSorted(Polynomial const& polynomial)
 {
     for (size_t i = 0; i < polynomial.monomials.size() - 1; ++i) {
-        if (!isMonomialLess(polynomial.monomials[i], polynomial.monomials[i+1])) {
+        if (!isMonomialGreater(polynomial.monomials[i], polynomial.monomials[i+1])) {
             return false;
         }
     }
@@ -65,7 +66,7 @@ bool isSorted(Polynomial const& polynomial)
 }
 
 /*
-  Возвращает старший одночлен. Так как все многочлены отсортированы,
+  Возвращает старший одночлен. Так как все многочлены отсортированы по убыванию,
   то старшим одночлленом всегда будет первый одночлен.
 */
 Monomial getMajorMonomial(Polynomial const& polynomial)
@@ -119,7 +120,7 @@ Polynomial multiplyByNormalisedMonomial(Polynomial const& polynomial, Monomial c
 }
 
 void sortPolynomial(Polynomial& polynomial) {
-    std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), isMonomialLess);
+    std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), isMonomialGreater);
 }
 
 void addMonomial(Polynomial& polynomial, Monomial const& monomial) {
@@ -194,12 +195,12 @@ void testIsMonomialLess()
 {
     auto monomial1 = Monomial{ std::vector<int>{2, 3}, 1 };
     auto monomial2 = Monomial{ std::vector<int>{2, 2}, 1 };
-    assert(isMonomialLess(monomial1, monomial2));
-    assert(!isMonomialLess(monomial2, monomial1));
+    assert(isMonomialGreater(monomial1, monomial2));
+    assert(!isMonomialGreater(monomial2, monomial1));
     auto monomial3 = Monomial{ std::vector<int>{2, 3}, 1 };
     auto monomial4 = Monomial{ std::vector<int>{1, 5}, 1 };
-    assert(isMonomialLess(monomial3, monomial4));
-    assert(!isMonomialLess(monomial4, monomial3));
+    assert(isMonomialGreater(monomial3, monomial4));
+    assert(!isMonomialGreater(monomial4, monomial3));
 }
 
 void testIsSorted()
