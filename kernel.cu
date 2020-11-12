@@ -133,6 +133,18 @@ void addMonomial(Polynomial& polynomial, Monomial const& monomial) {
     polynomial.monomials.push_back(monomial);
 }
 
+/*
+  Возвращает результат умножения polynomial на -1.
+*/
+Polynomial negate(Polynomial const& polynomial, int prime)
+{
+  auto current = polynomial;
+  for (auto & monomial : current.monomials) {
+    monomial.coefficient = prime - monomial.coefficient;
+  }
+  return current;
+}
+
 Polynomial addPolynomials(Polynomial const& polynomial1, Polynomial const& polynomial2) {
     Polynomial result{ polynomial1.monomials };
     for (const auto& monomial : polynomial2.monomials) {
@@ -191,39 +203,48 @@ void outputPolynomial(Polynomial const& polynomial)
     std::cout << std::endl;
 }
 
+void testNegate()
+{
+    auto poly1 = Polynomial{{}};
+    assert(polynomialEqual(negate(poly1, 7), poly1));
+    auto poly2 = Polynomial{{ {{2, 3}, 1}, {{2, 2}, 4} }};
+    auto poly3 = Polynomial{{ {{2, 3}, 6}, {{2, 2}, 3} }};
+    assert(polynomialEqual(negate(poly2, 7), poly3));
+}
+
 void testIsMonomialLess()
 {
-    auto monomial1 = Monomial{ std::vector<int>{2, 3}, 1 };
-    auto monomial2 = Monomial{ std::vector<int>{2, 2}, 1 };
+    auto monomial1 = Monomial{ {2, 3}, 1 };
+    auto monomial2 = Monomial{ {2, 2}, 1 };
     assert(isMonomialGreater(monomial1, monomial2));
     assert(!isMonomialGreater(monomial2, monomial1));
-    auto monomial3 = Monomial{ std::vector<int>{2, 3}, 1 };
-    auto monomial4 = Monomial{ std::vector<int>{1, 5}, 1 };
+    auto monomial3 = Monomial{ {2, 3}, 1 };
+    auto monomial4 = Monomial{ {1, 5}, 1 };
     assert(isMonomialGreater(monomial3, monomial4));
     assert(!isMonomialGreater(monomial4, monomial3));
 }
 
 void testIsSorted()
 {
-    auto polynomial1 = Polynomial{ { Monomial{{1, 5}, 1}, Monomial{{2, 4}, 1} } };
+    auto polynomial1 = Polynomial{{ Monomial{{1, 5}, 1}, Monomial{{2, 4}, 2} }};
     assert(!isSorted(polynomial1));
-    auto polynomial2 = Polynomial{ { Monomial{{3, 2}, 1}, Monomial{{2, 4}, 1} } };
+    auto polynomial2 = Polynomial{{ Monomial{{3, 2}, 2}, Monomial{{2, 4}, 1} }};
     assert(isSorted(polynomial2));
 }
 
 void testNormalisedMonomialDivide()
 {
-    auto divisible1 = Monomial{ std::vector<int>{2, 3}, 1 };
-    auto divisor1 = Monomial{ std::vector<int>{0, 0}, 1 };
-    auto expected1 = Monomial{ std::vector<int>{2, 3}, 1 };
+    auto divisible1 = Monomial{ {2, 3}, 1 };
+    auto divisor1 = Monomial{ {0, 0}, 1 };
+    auto expected1 = Monomial{ {2, 3}, 1 };
     auto result1 = normalisedMonomialDivide(divisible1, divisor1);
     assert(monomialEqual(result1, expected1));
-    auto divisor2 = Monomial{ std::vector<int>{2, 3}, 1 };
-    auto expected2 = Monomial{ std::vector<int>{0, 0}, 1 };
+    auto divisor2 = Monomial{ {2, 3}, 1 };
+    auto expected2 = Monomial{ {0, 0}, 1 };
     auto result2 = normalisedMonomialDivide(divisible1, divisor2);
     assert(monomialEqual(result2, expected2));
-    auto divisor3 = Monomial{ std::vector<int>{1, 1}, 1 };
-    auto expected3 = Monomial{ std::vector<int>{1, 2}, 1 };
+    auto divisor3 = Monomial{ {1, 1}, 1 };
+    auto expected3 = Monomial{ {1, 2}, 1 };
     auto result3 = normalisedMonomialDivide(divisible1, divisor3);
     assert(monomialEqual(result3, expected3));
 }
@@ -267,6 +288,7 @@ void testGenerateRandomSortedPolynomial()
 
 void testAll()
 {
+    testNegate();
     testIsMonomialLess();
     testIsSorted();
     testNormalisedMonomialDivide();
