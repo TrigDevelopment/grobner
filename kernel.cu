@@ -203,6 +203,11 @@ void outputPolynomial(Polynomial const& polynomial)
     std::cout << std::endl;
 }
 
+void subtract(Polynomial & polynomial1, Polynomial const& polynomial2, int prime)
+{
+    
+}
+
 void testNegate()
 {
     auto poly1 = Polynomial{{}};
@@ -286,6 +291,49 @@ void testGenerateRandomSortedPolynomial()
     }
 }
 
+void testSubtract()
+{
+    auto poly1 = Polynomial{{}};
+    subtract(poly1, {{}}, 7);
+    assert(polynomialEqual(poly1, {{}}));
+
+    auto poly2 = Polynomial{{}};
+    subtract(poly2, {{ {{2, 3}, 5} }}, 7);
+    assert(polynomialEqual(poly2, {{ {{2, 3}, 2} }}));
+
+    auto poly3 = Polynomial{{ {{2, 3}, 5} }};
+    subtract(poly3, {{}}, 7);
+    assert(polynomialEqual(poly3, {{ {{2, 3}, 5} }}));
+
+    auto poly4 = Polynomial{{ {{2, 3}, 5} }};
+    subtract(poly4, {{ {{2, 3}, 2} }}, 7);
+    assert(polynomialEqual(poly4, {{ {{2, 3}, 3} }}));
+
+    auto poly5 = Polynomial{{ {{2, 3}, 5} }};
+    subtract(poly5, {{ {{2, 3}, 5} }}, 7);
+    assert(polynomialEqual(poly5, {{}}));
+
+    auto poly6 = Polynomial{{ {{2, 3}, 2} }};
+    subtract(poly6, {{ {{2, 3}, 3} }}, 7);
+    assert(polynomialEqual(poly6, {{ {{2, 3}, 6} }}));
+
+    auto poly7 = Polynomial{{ {{3, 3}, 1} }};
+    subtract(poly7, {{ {{2, 2}, 1} }}, 5);
+    assert(polynomialEqual(poly7, {{ {{3, 3}, 1}, {{2, 2}, 4} }}));
+
+    auto poly8 = Polynomial{{ {{2, 2}, 1} }};
+    subtract(poly8, {{ {{3, 3}, 1} }}, 5);
+    assert(polynomialEqual(poly8, {{ {{3, 3}, 4}, {{2, 2}, 1} }}));
+
+    auto poly9 = Polynomial{{ {{4, 4}, 2}, {{2, 2}, 3} }};
+    subtract(poly9, {{ {{3, 3}, 4}, {{1, 1}, 3} }}, 5);
+    assert(polynomialEqual(poly9, {{ {{4, 4}, 2}, {{3, 3}, 1}, {{2, 2}, 3}, {{1, 1}, 2} }}));
+
+    auto poly10 = Polynomial{{ {{1, 2}, 1} }};
+    subtract(poly10, {{ {{2, 1}, 1} }}, 5);
+    assert(polynomialEqual(poly10, {{ {{2, 1}, 4}, {{1, 2}, 1} }}));
+}
+
 void testAll()
 {
     testNegate();
@@ -294,6 +342,7 @@ void testAll()
     testNormalisedMonomialDivide();
     testMultiplyByNormalisedMonomial();
     testGenerateRandomSortedPolynomial();
+    testSubtract();
 }
 
 int main(void)
