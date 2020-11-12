@@ -93,12 +93,11 @@ Monomial normalisedMonomialLeastCommonMultiple(
 
 /*
   Возвращает результат деления divisible на divisor.
-  divisible и divisor должны быть нормализованы,
-  то есть коэффициент при них должен быть равен 1.
+  divisor должен быть нормализован,
+  то есть коэффициент при этом одночлене должен быть равен 1.
 */
-Monomial normalisedMonomialDivide(Monomial const& divisible, Monomial const& divisor)
+Monomial dividedByNormalisedMonomial(Monomial const& divisible, Monomial const& divisor)
 {
-    assert(divisible.coefficient == 1);
     assert(divisor.coefficient == 1);
     auto res = divisible;
     for (size_t i = 0; i < divisible.degrees.size(); ++i) {
@@ -208,6 +207,46 @@ void subtract(Polynomial & polynomial1, Polynomial const& polynomial2, int prime
     
 }
 
+Polynomial multipliedByMonomial(Polynomial const& polynomial, Monomial const& monomial, int prime)
+{
+    return {{}};
+}
+
+bool isNormalisedMonomialDivide(Monomial const& monomial1, Monomial const& monomial2)
+{
+    assert(monomial1.coefficient == 1);
+    return false;
+}
+
+void normalise(Polynomial & polynomial, int prime)
+{
+    assert(isSorted(polynomial));
+    //TODO
+}
+
+Polynomial getReducedPolynomial(Polynomial const& polynomial,
+  std::vector<Polynomial> const& basisPolynomials, int prime)
+{
+    auto current = polynomial;
+    for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
+        auto monomial = polynomial.monomials[monomialI];
+        for (size_t basisPolynomialI = 0;
+            basisPolynomialI < basisPolynomials.size();
+            ++basisPolynomialI) {
+            auto basisPolynomial = basisPolynomials[basisPolynomialI];
+            auto major = getMajorMonomial(basisPolynomial);
+            if (isNormalisedMonomialDivide(major, monomial)) {
+                auto multiplier = dividedByNormalisedMonomial(monomial, major);
+                auto multipliedBasisPolynomial = 
+                    multipliedByMonomial(basisPolynomial, multiplier, prime);
+                subtract(current, multipliedBasisPolynomial, prime);
+            }
+        }
+    }
+    normalise(current, prime);
+    return current;
+}
+
 void testNegate()
 {
     auto poly1 = Polynomial{{}};
@@ -239,18 +278,20 @@ void testIsSorted()
 
 void testNormalisedMonomialDivide()
 {
-    auto divisible1 = Monomial{ {2, 3}, 1 };
+    auto divisible1 = Monomial{ {2, 3}, 2 };
     auto divisor1 = Monomial{ {0, 0}, 1 };
-    auto expected1 = Monomial{ {2, 3}, 1 };
-    auto result1 = normalisedMonomialDivide(divisible1, divisor1);
+    auto expected1 = Monomial{ {2, 3}, 2 };
+    auto result1 = dividedByNormalisedMonomial(divisible1, divisor1);
+
     assert(monomialEqual(result1, expected1));
     auto divisor2 = Monomial{ {2, 3}, 1 };
-    auto expected2 = Monomial{ {0, 0}, 1 };
-    auto result2 = normalisedMonomialDivide(divisible1, divisor2);
+    auto expected2 = Monomial{ {0, 0}, 2 };
+    auto result2 = dividedByNormalisedMonomial(divisible1, divisor2);
     assert(monomialEqual(result2, expected2));
+
     auto divisor3 = Monomial{ {1, 1}, 1 };
-    auto expected3 = Monomial{ {1, 2}, 1 };
-    auto result3 = normalisedMonomialDivide(divisible1, divisor3);
+    auto expected3 = Monomial{ {1, 2}, 2 };
+    auto result3 = dividedByNormalisedMonomial(divisible1, divisor3);
     assert(monomialEqual(result3, expected3));
 }
 
@@ -334,6 +375,33 @@ void testSubtract()
     assert(polynomialEqual(poly10, {{ {{2, 1}, 4}, {{1, 2}, 1} }}));
 }
 
+void testMultipliedByMonomial()
+{
+    auto poly0 = Polynomial{ { {{0, 0}, 1} } };
+    auto monomial0 = Monomial{ {0, 0}, 1 };
+    auto expected0 = Polynomial{ { {{0, 0}, 1} } };
+    auto result0 = multipliedByMonomial(poly0, monomial0, 5);
+    assert(polynomialEqual(expected0, result0));
+
+    auto poly1 = Polynomial{{ {{1, 4}, 1}}};
+    auto monomial1 = Monomial{{1, 1}, 1};
+    auto expected1 = Polynomial{{ {{2, 5}, 1} }};
+    auto result1 = multipliedByMonomial(poly1, monomial1, 5);
+    assert(polynomialEqual(expected1, result1));
+
+    auto poly2 = Polynomial{ { {{3, 4}, 1}, {{1, 2}, 1} } };
+    auto monomial2 = Monomial{ {1, 1}, 1 };
+    auto expected2 = Polynomial{ { {{4, 5}, 1}, {{2, 3}, 1} } };
+    auto result2 = multipliedByMonomial(poly2, monomial2, 5);
+    assert(polynomialEqual(expected2, result2));
+
+    auto poly3 = Polynomial{{ {{1, 1}, 1} }};
+    auto monomial3 = Monomial{ {0, 0}, 2 };
+    auto expected3 = Polynomial{{ {{1, 1}, 2} }};
+    auto result3 = multipliedByMonomial(poly3, monomial3, 5);
+    assert(polynomialEqual(expected3, result3));
+}
+
 void testAll()
 {
     testNegate();
@@ -343,6 +411,7 @@ void testAll()
     testMultiplyByNormalisedMonomial();
     testGenerateRandomSortedPolynomial();
     testSubtract();
+    testMultipliedByMonomial();
 }
 
 int main(void)
