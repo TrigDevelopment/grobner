@@ -240,6 +240,8 @@ Polynomial getReducedPolynomial(Polynomial const& polynomial,
                 auto multipliedBasisPolynomial = 
                     multipliedByMonomial(basisPolynomial, multiplier, prime);
                 subtract(current, multipliedBasisPolynomial, prime);
+                monomialI = 0;
+                basisPolynomialI = 0;
             }
         }
     }
