@@ -21,6 +21,34 @@ struct Polynomial
     std::vector<Monomial> monomials;
 };
 
+
+void mod(int& number, int prime) {
+    number %= prime;
+    if (number < 0) {
+        number += prime;
+    }
+}
+
+/* Алгоритм Евклида*/
+int gcdex(int a, int b, int& x, int& y) {
+    if (b == 0) {
+        x = 1;
+        y = 0;
+        return a;
+    }
+    int x1, y1;
+    int d1 = gcdex(b, a % b, x1, y1);
+    x = y1;
+    y = x1 - (a / b) * y1;
+    return d1;
+}
+
+int reverseElement(int a, int N) {
+    int x, y, d;
+    d = gcdex(a, N, x, y);
+    return x;
+}
+
 /*
   Определяет, равны ли полиномы a и b.
 */
@@ -58,7 +86,7 @@ bool isMonomialGreater(Monomial const& a, Monomial const& b)
 bool isSorted(Polynomial const& polynomial)
 {
     for (size_t i = 0; i < polynomial.monomials.size() - 1; ++i) {
-        if (!isMonomialGreater(polynomial.monomials[i], polynomial.monomials[i+1])) {
+        if (!isMonomialGreater(polynomial.monomials[i], polynomial.monomials[i + 1])) {
             return false;
         }
     }
@@ -122,10 +150,14 @@ void sortPolynomial(Polynomial& polynomial) {
     std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), isMonomialGreater);
 }
 
-void addMonomial(Polynomial& polynomial, Monomial const& monomial) {
-    for (auto& m : polynomial.monomials) {
-        if (m.degrees == monomial.degrees) {
-            m.coefficient += monomial.coefficient;
+void addMonomial(Polynomial& polynomial, Monomial const& monomial, int prime) {
+    for (size_t i = 0; i < polynomial.monomials.size(); ++i) {
+        if (polynomial.monomials[i].degrees == monomial.degrees) {
+            polynomial.monomials[i].coefficient += monomial.coefficient;
+            mod(polynomial.monomials[i].coefficient, prime);
+            if (!polynomial.monomials[i].coefficient) {
+                polynomial.monomials.erase(polynomial.monomials.begin() + i);
+            }
             return;
         }
     }
@@ -137,17 +169,17 @@ void addMonomial(Polynomial& polynomial, Monomial const& monomial) {
 */
 Polynomial negate(Polynomial const& polynomial, int prime)
 {
-  auto current = polynomial;
-  for (auto & monomial : current.monomials) {
-    monomial.coefficient = prime - monomial.coefficient;
-  }
-  return current;
+    auto current = polynomial;
+    for (auto& monomial : current.monomials) {
+        monomial.coefficient = prime - monomial.coefficient;
+    }
+    return current;
 }
 
-Polynomial addPolynomials(Polynomial const& polynomial1, Polynomial const& polynomial2) {
+Polynomial addPolynomials(Polynomial const& polynomial1, Polynomial const& polynomial2, int prime) {
     Polynomial result{ polynomial1.monomials };
     for (const auto& monomial : polynomial2.monomials) {
-        addMonomial(result, monomial);
+        addMonomial(result, monomial, prime);
     }
     sortPolynomial(result);
     return result;
@@ -164,9 +196,9 @@ Polynomial generateRandomSortedPolynomial(size_t nVariables, size_t maxVariableD
             int degree = rand() % (maxVariableDegree + 1);
             degrees.push_back(degree);
         }
-        int coefficient = 1 + rand() % (prime-1);
+        int coefficient = 1 + rand() % (prime - 1);
         Monomial monomial{ degrees, coefficient };
-        addMonomial(result, monomial);
+        addMonomial(result, monomial, prime);
     }
     sortPolynomial(result);
     return result;
@@ -202,30 +234,50 @@ void outputPolynomial(Polynomial const& polynomial)
     std::cout << std::endl;
 }
 
-void subtract(Polynomial & polynomial1, Polynomial const& polynomial2, int prime)
+void subtract(Polynomial& polynomial1, Polynomial const& polynomial2, int prime)
 {
-    
+    polynomial1 = addPolynomials(polynomial1, negate(polynomial2, prime), prime);
 }
 
 Polynomial multipliedByMonomial(Polynomial const& polynomial, Monomial const& monomial, int prime)
 {
-    return {{}};
+    auto res = polynomial;
+    for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
+        for (size_t i = 0; i < monomial.degrees.size(); ++i) {
+            res.monomials[monomialI].degrees[i] += monomial.degrees[i];
+        }
+        res.monomials[monomialI].coefficient *= monomial.coefficient;
+        mod(res.monomials[monomialI].coefficient, prime);
+        if (!res.monomials[monomialI].coefficient) {
+            res.monomials.erase(res.monomials.begin() + monomialI);
+        }
+    }
+    return res;
 }
 
-bool isNormalisedMonomialDivide(Monomial const& monomial1, Monomial const& monomial2)
+bool isMonomialDivide(Monomial const& monomial1, Monomial const& monomial2)
 {
-    assert(monomial1.coefficient == 1);
-    return false;
+    assert(monomial1.degrees.size() == monomial2.degrees.size());
+    for (size_t i = 0; i < monomial1.degrees.size(); ++i) {
+        if (monomial1.degrees[i] < monomial2.degrees[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void normalise(Polynomial & polynomial, int prime)
+void normalise(Polynomial& polynomial, int prime)
 {
     assert(isSorted(polynomial));
-    //TODO
+    int coefficient = reverseElement(getMajorMonomial(polynomial).coefficient, prime);
+    for (auto& monomial : polynomial.monomials) {
+        monomial.coefficient *= coefficient;
+        mod(monomial.coefficient, prime);
+    }
 }
 
 Polynomial getReducedPolynomial(Polynomial const& polynomial,
-  std::vector<Polynomial> const& basisPolynomials, int prime)
+    std::vector<Polynomial> const& basisPolynomials, int prime)
 {
     auto current = polynomial;
     for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
@@ -235,9 +287,9 @@ Polynomial getReducedPolynomial(Polynomial const& polynomial,
             ++basisPolynomialI) {
             auto basisPolynomial = basisPolynomials[basisPolynomialI];
             auto major = getMajorMonomial(basisPolynomial);
-            if (isNormalisedMonomialDivide(major, monomial)) {
+            if (isMonomialDivide(major, monomial)) {
                 auto multiplier = dividedByNormalisedMonomial(monomial, major);
-                auto multipliedBasisPolynomial = 
+                auto multipliedBasisPolynomial =
                     multipliedByMonomial(basisPolynomial, multiplier, prime);
                 subtract(current, multipliedBasisPolynomial, prime);
                 monomialI = 0;
@@ -251,10 +303,10 @@ Polynomial getReducedPolynomial(Polynomial const& polynomial,
 
 void testNegate()
 {
-    auto poly1 = Polynomial{{}};
+    auto poly1 = Polynomial{ {} };
     assert(polynomialEqual(negate(poly1, 7), poly1));
-    auto poly2 = Polynomial{{ {{2, 3}, 1}, {{2, 2}, 4} }};
-    auto poly3 = Polynomial{{ {{2, 3}, 6}, {{2, 2}, 3} }};
+    auto poly2 = Polynomial{ { {{2, 3}, 1}, {{2, 2}, 4} } };
+    auto poly3 = Polynomial{ { {{2, 3}, 6}, {{2, 2}, 3} } };
     assert(polynomialEqual(negate(poly2, 7), poly3));
 }
 
@@ -272,9 +324,9 @@ void testIsMonomialLess()
 
 void testIsSorted()
 {
-    auto polynomial1 = Polynomial{{ Monomial{{1, 5}, 1}, Monomial{{2, 4}, 2} }};
+    auto polynomial1 = Polynomial{ { Monomial{{1, 5}, 1}, Monomial{{2, 4}, 2} } };
     assert(!isSorted(polynomial1));
-    auto polynomial2 = Polynomial{{ Monomial{{3, 2}, 2}, Monomial{{2, 4}, 1} }};
+    auto polynomial2 = Polynomial{ { Monomial{{3, 2}, 2}, Monomial{{2, 4}, 1} } };
     assert(isSorted(polynomial2));
 }
 
@@ -385,9 +437,9 @@ void testMultipliedByMonomial()
     auto result0 = multipliedByMonomial(poly0, monomial0, 5);
     assert(polynomialEqual(expected0, result0));
 
-    auto poly1 = Polynomial{{ {{1, 4}, 1}}};
-    auto monomial1 = Monomial{{1, 1}, 1};
-    auto expected1 = Polynomial{{ {{2, 5}, 1} }};
+    auto poly1 = Polynomial{ { {{1, 4}, 1}} };
+    auto monomial1 = Monomial{ {1, 1}, 1 };
+    auto expected1 = Polynomial{ { {{2, 5}, 1} } };
     auto result1 = multipliedByMonomial(poly1, monomial1, 5);
     assert(polynomialEqual(expected1, result1));
 
@@ -397,9 +449,9 @@ void testMultipliedByMonomial()
     auto result2 = multipliedByMonomial(poly2, monomial2, 5);
     assert(polynomialEqual(expected2, result2));
 
-    auto poly3 = Polynomial{{ {{1, 1}, 1} }};
+    auto poly3 = Polynomial{ { {{1, 1}, 1} } };
     auto monomial3 = Monomial{ {0, 0}, 2 };
-    auto expected3 = Polynomial{{ {{1, 1}, 2} }};
+    auto expected3 = Polynomial{ { {{1, 1}, 2} } };
     auto result3 = multipliedByMonomial(poly3, monomial3, 5);
     assert(polynomialEqual(expected3, result3));
 }
