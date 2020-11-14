@@ -21,6 +21,10 @@ struct Polynomial
     std::vector<Monomial> monomials;
 };
 
+struct PolynomialBasis
+{
+  std::vector<Polynomial> polynomials;
+};
 
 void mod(int& number, int prime) {
     number %= prime;
@@ -43,9 +47,9 @@ int gcdex(int a, int b, int& x, int& y) {
     return d1;
 }
 
-int reverseElement(int a, int N) {
-    int x, y, d;
-    d = gcdex(a, N, x, y);
+int getInversedElement(int a, int N) {
+    int x, y;
+    gcdex(a, N, x, y);
     return x;
 }
 
@@ -85,7 +89,7 @@ bool isMonomialGreater(Monomial const& a, Monomial const& b)
 */
 bool isSorted(Polynomial const& polynomial)
 {
-    for (size_t i = 0; i < polynomial.monomials.size() - 1; ++i) {
+    for (size_t i = 0; i + 1 < polynomial.monomials.size(); ++i) {
         if (!isMonomialGreater(polynomial.monomials[i], polynomial.monomials[i + 1])) {
             return false;
         }
@@ -99,7 +103,25 @@ bool isSorted(Polynomial const& polynomial)
 */
 Monomial getMajorMonomial(Polynomial const& polynomial)
 {
-    return polynomial.monomials[0];
+  assert(polynomial.monomials.size() > 0);
+  return polynomial.monomials[0];
+}
+
+bool isPolynomialGreater(Polynomial const& a, Polynomial const& b)
+{
+    auto majorA = getMajorMonomial(a);
+    auto majorB = getMajorMonomial(b);
+    return isMonomialGreater(majorA, majorB);
+}
+
+bool isSorted(PolynomialBasis const& basis)
+{
+    for (size_t i = 0; i + 1 < basis.polynomials.size(); ++i) {
+        if (!isPolynomialGreater(basis.polynomials[i], basis.polynomials[i + 1])) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /*
@@ -146,8 +168,14 @@ Polynomial multiplyByNormalisedMonomial(Polynomial const& polynomial, Monomial c
     return res;
 }
 
-void sortPolynomial(Polynomial& polynomial) {
+void sortPolynomial(Polynomial& polynomial) 
+{
     std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), isMonomialGreater);
+}
+
+void sortPolynomialBasis(PolynomialBasis& basis) 
+{
+    std::sort(basis.polynomials.begin(), basis.polynomials.end(), isPolynomialGreater);
 }
 
 void addMonomial(Polynomial& polynomial, Monomial const& monomial, int prime) {
@@ -188,7 +216,7 @@ Polynomial addPolynomials(Polynomial const& polynomial1, Polynomial const& polyn
 Polynomial generateRandomSortedPolynomial(size_t nVariables, size_t maxVariableDegree,
     size_t prime, size_t maxNMonomials)
 {
-    size_t nMonomials = rand() % maxNMonomials + 1;
+    size_t nMonomials = rand() % (maxNMonomials + 1);
     Polynomial result{ {} };
     for (size_t i = 0; i < nMonomials; ++i) {
         std::vector<int> degrees;
@@ -259,7 +287,7 @@ bool isMonomialDivide(Monomial const& monomial1, Monomial const& monomial2)
 {
     assert(monomial1.degrees.size() == monomial2.degrees.size());
     for (size_t i = 0; i < monomial1.degrees.size(); ++i) {
-        if (monomial1.degrees[i] < monomial2.degrees[i]) {
+        if (monomial1.degrees[i] > monomial2.degrees[i]) {
             return false;
         }
     }
@@ -269,31 +297,34 @@ bool isMonomialDivide(Monomial const& monomial1, Monomial const& monomial2)
 void normalise(Polynomial& polynomial, int prime)
 {
     assert(isSorted(polynomial));
-    int coefficient = reverseElement(getMajorMonomial(polynomial).coefficient, prime);
-    for (auto& monomial : polynomial.monomials) {
-        monomial.coefficient *= coefficient;
-        mod(monomial.coefficient, prime);
+    if (polynomial.monomials.size() > 0) {
+        auto const major = getMajorMonomial(polynomial);
+        int coefficient = getInversedElement(major.coefficient, prime);
+        for (auto& monomial : polynomial.monomials) {
+            monomial.coefficient *= coefficient;
+            mod(monomial.coefficient, prime);
+        }
     }
 }
 
 Polynomial getReducedPolynomial(Polynomial const& polynomial,
-    std::vector<Polynomial> const& basisPolynomials, int prime)
+    PolynomialBasis const& basis, int prime)
 {
+    assert(isSorted(basis));
     auto current = polynomial;
-    for (size_t monomialI = 0; monomialI < polynomial.monomials.size(); ++monomialI) {
-        auto monomial = polynomial.monomials[monomialI];
-        for (size_t basisPolynomialI = 0;
-            basisPolynomialI < basisPolynomials.size();
-            ++basisPolynomialI) {
-            auto basisPolynomial = basisPolynomials[basisPolynomialI];
-            auto major = getMajorMonomial(basisPolynomial);
+    for (size_t basisPolynomialI = 0;
+        basisPolynomialI < basis.polynomials.size();
+        ++basisPolynomialI) {
+        auto basisPolynomial = basis.polynomials[basisPolynomialI];
+        auto major = getMajorMonomial(basisPolynomial);
+        for (size_t monomialI = 0; monomialI < current.monomials.size(); ++monomialI) {
+            auto monomial = current.monomials[monomialI];
             if (isMonomialDivide(major, monomial)) {
                 auto multiplier = dividedByNormalisedMonomial(monomial, major);
                 auto multipliedBasisPolynomial =
                     multipliedByMonomial(basisPolynomial, multiplier, prime);
                 subtract(current, multipliedBasisPolynomial, prime);
                 monomialI = 0;
-                basisPolynomialI = 0;
             }
         }
     }
@@ -456,6 +487,49 @@ void testMultipliedByMonomial()
     assert(polynomialEqual(expected3, result3));
 }
 
+void testGetReducedPolynomial()
+{
+    auto poly0 = Polynomial{{}};
+    auto poly1 = Polynomial{{ {{0}, 1} }};
+    auto result1 = getReducedPolynomial(poly1, { { poly1 } }, 7);
+    assert(polynomialEqual(result1, poly0));
+
+    auto poly2 = Polynomial{{ {{1}, 1} }};
+    auto result2 = getReducedPolynomial(poly2, { { poly1 } }, 7);
+    assert(polynomialEqual(result2, poly0));
+
+    auto poly3 = Polynomial{{ {{2}, 1}}};
+    auto poly4 = Polynomial{{ {{5}, 1} }};
+    auto result3 = getReducedPolynomial(poly4, { { poly3 } }, 7);
+    assert(polynomialEqual(result3, poly0));
+
+    auto result4 = getReducedPolynomial(poly3, { { poly4 } }, 7);
+    assert(polynomialEqual(result4, poly3));
+
+    auto poly5 = Polynomial{ { {{1, 0}, 1}, {{0, 1}, 1} } };
+    auto poly6 = Polynomial{ { {{1, 0}, 1} }};
+    auto poly7 = Polynomial{{ {{0, 1}, 1} }};
+    auto result5 = getReducedPolynomial(poly6, { { poly5 } }, 7);
+    assert(polynomialEqual(result5, poly7));
+
+    auto poly8 = Polynomial{ { {{0, 1, 0}, 1}, {{0, 0, 1}, 1} } };
+    auto poly9 = Polynomial{ { {{1, 0, 0}, 1}, {{0, 1, 0}, 1} } };
+    auto poly10 = Polynomial{ { {{1, 0, 0}, 1} } };
+    auto poly11 = Polynomial{ { {{0, 0, 1}, 1} } };
+    auto basis0 = PolynomialBasis{ { poly8, poly9 } };
+    sortPolynomialBasis(basis0);
+    auto result6 = getReducedPolynomial(poly10, basis0, 7);
+    assert(polynomialEqual(result6, poly11));
+
+    auto result7 = getReducedPolynomial(poly8, basis0, 7);
+    assert(polynomialEqual(result7, {{}}));
+
+    auto poly12 = Polynomial{ { {{1, 0}, 3} } };
+    auto poly13 = Polynomial{ { {{0, 1}, 1} } };
+    auto result8 = getReducedPolynomial(poly12, { { poly5 } }, 7);
+    assert(polynomialEqual(result8, poly13));
+}
+
 void testAll()
 {
     testNegate();
@@ -466,6 +540,7 @@ void testAll()
     testGenerateRandomSortedPolynomial();
     testSubtract();
     testMultipliedByMonomial();
+    testGetReducedPolynomial();
 }
 
 int main(void)
