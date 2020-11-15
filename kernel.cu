@@ -332,6 +332,20 @@ Polynomial getReducedPolynomial(Polynomial const& polynomial,
     return current;
 }
 
+Polynomial getPolynomialWithEliminatedMajorMonomials(
+  Polynomial const& polynomial1, Polynomial const& polynomial2, int prime)
+{
+    auto major1 = getMajorMonomial(polynomial1);
+    auto major2 = getMajorMonomial(polynomial2);
+    auto lcm = normalisedMonomialLeastCommonMultiple(major1, major2);
+    auto multiplier1 = dividedByNormalisedMonomial(lcm, major1);
+    auto multiplier2 = dividedByNormalisedMonomial(lcm, major2);
+    auto multipliedPolynomial1 = multipliedByMonomial(polynomial1, multiplier1, prime);
+    auto multipliedPolynomial2 = multipliedByMonomial(polynomial2, multiplier2, prime);
+    subtract(multipliedPolynomial1, multipliedPolynomial2, prime);
+    return multipliedPolynomial1;
+}
+
 void testNegate()
 {
     auto poly1 = Polynomial{ {} };
@@ -530,6 +544,25 @@ void testGetReducedPolynomial()
     assert(polynomialEqual(result8, poly13));
 }
 
+void testGetPolynomialWithEliminatedMajorMonomials()
+{
+    auto result1 = getPolynomialWithEliminatedMajorMonomials(
+      {{ {{0}, 1} }}, {{ {{0}, 1} }}, 7);
+    assert(polynomialEqual(result1, {{}}));
+
+    auto result2 = getPolynomialWithEliminatedMajorMonomials(
+      { { {{1, 0}, 1} } }, { { {{0, 1}, 1} } }, 7);
+    assert(polynomialEqual(result2, { {} }));
+
+    auto result3 = getPolynomialWithEliminatedMajorMonomials(
+      { { {{1, 0}, 1}, {{0, 1}, 1} } }, { { {{1, 0}, 1} } }, 7);
+    assert(polynomialEqual(result3, { { {{0, 1}, 1} } }));
+
+    auto result4 = getPolynomialWithEliminatedMajorMonomials(
+      { { {{1, 0}, 1} } }, { { {{1, 0}, 1}, {{0, 1}, 1} } }, 7);
+    assert(polynomialEqual(result4, { { {{0, 1}, 6} } }));
+}
+
 void testAll()
 {
     testNegate();
@@ -541,6 +574,7 @@ void testAll()
     testSubtract();
     testMultipliedByMonomial();
     testGetReducedPolynomial();
+    testGetPolynomialWithEliminatedMajorMonomials();
 }
 
 int main(void)
