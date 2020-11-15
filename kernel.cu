@@ -68,6 +68,20 @@ bool operator==(const Monomial& a, const Monomial& b)
     return a.degrees == b.degrees && a.coefficient == b.coefficient;
 }
 
+bool operator>(const Monomial& a, const Monomial& b)
+{
+    assert(a.degrees.size() == b.degrees.size());
+    for (size_t i = 0; i < a.degrees.size(); ++i) {
+        if (a.degrees[i] > b.degrees[i]) {
+            return true;
+        }
+        else if (a.degrees[i] < b.degrees[i]) {
+            return false;
+        }
+    }
+    return false;
+}
+
 struct Polynomial
 {
     std::vector<Monomial> monomials;
@@ -82,10 +96,22 @@ struct Polynomial
     }
 };
 
+bool operator==(const Polynomial& a, const Polynomial& b)
+{
+    return a.monomials == b.monomials;
+}
+
+bool operator>(const Polynomial& a, const Polynomial& b);
+
 struct PolynomialBasis
 {
     std::vector<Polynomial> polynomials;
 };
+
+bool operator==(const PolynomialBasis& a, const PolynomialBasis& b)
+{
+    return a.polynomials == b.polynomials;
+}
 
 void mod(int& number, int prime) {
     number %= prime;
@@ -145,16 +171,7 @@ bool basisEqual(PolynomialBasis const& a, PolynomialBasis const& b)
 
 bool isMonomialGreater(Monomial const& a, Monomial const& b)
 {
-    assert(a.degrees.size() == b.degrees.size());
-    for (size_t i = 0; i < a.degrees.size(); ++i) {
-        if (a.degrees[i] > b.degrees[i]) {
-            return true;
-        }
-        else if (a.degrees[i] < b.degrees[i]) {
-            return false;
-        }
-    }
-    return false;
+    return a > b;
 }
 
 /*
@@ -183,17 +200,7 @@ Monomial getMajorMonomial(Polynomial const& polynomial)
 
 bool isPolynomialGreater(Polynomial const& a, Polynomial const& b)
 {
-    assert(isSorted(a));
-    assert(isSorted(b));
-    for (size_t i = 0; i < a.monomials.size(); ++i) {
-        if (isMonomialGreater(a.monomials[i], b.monomials[i])) {
-            return true;
-        }
-        else if (isMonomialGreater(b.monomials[i], a.monomials[i])) {
-            return false;
-        }
-    }
-    return false;
+    return a > b;
 }
 
 bool isSorted(PolynomialBasis const& basis)
@@ -207,6 +214,21 @@ bool isSorted(PolynomialBasis const& basis)
         }
     }
     return true;
+}
+
+bool operator>(const Polynomial& a, const Polynomial& b)
+{
+    assert(isSorted(a));
+    assert(isSorted(b));
+    for (size_t i = 0; i < a.monomials.size(); ++i) {
+        if (a.monomials[i] > b.monomials[i]) {
+            return true;
+        }
+        else if (b.monomials[i] > a.monomials[i]) {
+            return false;
+        }
+    }
+    return false;
 }
 
 /*
