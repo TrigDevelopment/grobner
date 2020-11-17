@@ -41,7 +41,7 @@ struct Monomial {
   Monomial(std::vector<int> degrees, int coefficient)
     : degrees(degrees), coefficient(coefficient) {}
 
-  Monomial(const std::string &input, size_t nVariables) {
+  Monomial(std::string const &input, size_t nVariables) {
     auto variables = split(input, "*");
     if (isPositiveInteger(variables.at(0))) {
       coefficient = atoi(variables.at(0).c_str());
@@ -66,13 +66,13 @@ struct Monomial {
   }
 };
 
-bool operator==(const Monomial &a, const Monomial &b) {
+bool operator==(Monomial const &a, Monomial const &b) {
   return a.degrees == b.degrees && a.coefficient == b.coefficient;
 }
 
-bool operator!=(const Monomial &a, const Monomial &b) { return !(a == b); }
+bool operator!=(Monomial const &a, Monomial const &b) { return !(a == b); }
 
-bool operator>(const Monomial &a, const Monomial &b) {
+bool operator>(Monomial const &a, Monomial const &b) {
   assert(a.degrees.size() == b.degrees.size());
   for (size_t i = 0; i < a.degrees.size(); ++i) {
     if (a.degrees[i] > b.degrees[i]) {
@@ -90,7 +90,7 @@ struct Polynomial {
 
   Polynomial() {}
   Polynomial(std::vector<Monomial> monomials) : monomials(monomials) {}
-  Polynomial(const std::string &input, size_t nVariables) {
+  Polynomial(std::string const &input, size_t nVariables) {
     auto monomialTokens = split(input, " + ");
     for (const auto &token : monomialTokens) {
       monomials.push_back(Monomial(token, nVariables));
@@ -161,10 +161,6 @@ bool isSorted(Polynomial const &polynomial) {
 Monomial getMajorMonomial(Polynomial const &polynomial) {
   assert(polynomial.monomials.size() > 0);
   return polynomial.monomials[0];
-}
-
-bool isPolynomialGreater(Polynomial const &a, Polynomial const &b) {
-  return a > b;
 }
 
 bool isSorted(PolynomialBasis const &basis) {
@@ -243,7 +239,7 @@ void sortPolynomial(Polynomial &polynomial) {
 
 void sortPolynomialBasis(PolynomialBasis &basis) {
   std::sort(basis.polynomials.begin(), basis.polynomials.end(),
-    isPolynomialGreater);
+    std::greater<>());
 }
 
 void addMonomial(Polynomial &polynomial, Monomial const &monomial, int prime) {
@@ -456,7 +452,7 @@ Polynomial getFirstNotZeroSPolynomial(PolynomialBasis const &basis, int prime) {
       }
     }
   }
-  return { {} };
+  return {};
 }
 
 PolynomialBasis getGrobnerBasis(PolynomialBasis const &initialBasis,
@@ -538,7 +534,7 @@ bool isGrobnerBasis(PolynomialBasis const &initialBasis,
 }
 
 void testNegate() {
-  auto poly1 = Polynomial{ {} };
+  auto poly1 = Polynomial{};
   assert(negate(poly1, 7) == poly1);
   auto poly2 = Polynomial("a^2*b^3 + 4*a^2*b^2", 2);
   auto poly3 = Polynomial("6*a^2*b^3 + 3*a^2*b^2", 2);
@@ -596,9 +592,9 @@ void testMultiplyByNormalisedMonomial() {
   auto expected3 = Polynomial("1", 2);
   auto result3 = multiplyByNormalisedMonomial(polynomial3, monomial3);
   assert(result3 == expected3);
-  auto polynomial4 = Polynomial{ {} };
+  auto polynomial4 = Polynomial{};
   auto monomial4 = Monomial("a^5", 2);
-  auto expected4 = Polynomial{ {} };
+  auto expected4 = Polynomial{};
   auto result4 = multiplyByNormalisedMonomial(polynomial4, monomial4);
   assert(result4 == expected4);
 }
@@ -616,15 +612,15 @@ void testGenerateRandomSortedPolynomial() {
 
 void testSubtract() {
   auto poly1 = Polynomial();
-  subtract(poly1, { {} }, 7);
-  assert(poly1 == Polynomial{ {} });
+  subtract(poly1, {}, 7);
+  assert(poly1 == Polynomial{});
 
   auto poly2 = Polynomial();
   subtract(poly2, { "5*a^2*b^3", 2 }, 7);
   assert(poly2 == Polynomial("2*a^2*b^3", 2));
 
   auto poly3 = Polynomial("5*a^2*b^3", 2);
-  subtract(poly3, { {} }, 7);
+  subtract(poly3, {}, 7);
   assert(poly3 == Polynomial("5*a^2*b^3", 2));
 
   auto poly4 = Polynomial("5*a^2*b^3", 2);
