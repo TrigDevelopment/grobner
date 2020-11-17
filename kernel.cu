@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <time.h>
 #include <string>
+#include <cctype>
+#include <functional>
 
 bool isPositiveInteger(const std::string& s)
 {
@@ -68,6 +70,11 @@ bool operator==(const Monomial& a, const Monomial& b)
     return a.degrees == b.degrees && a.coefficient == b.coefficient;
 }
 
+bool operator!=(const Monomial& a, const Monomial& b)
+{
+    return !(a == b);
+}
+
 bool operator>(const Monomial& a, const Monomial& b)
 {
     assert(a.degrees.size() == b.degrees.size());
@@ -99,6 +106,11 @@ struct Polynomial
 bool operator==(const Polynomial& a, const Polynomial& b)
 {
     return a.monomials == b.monomials;
+}
+
+bool operator!=(const Polynomial& a, const Polynomial& b)
+{
+    return !(a == b);
 }
 
 bool operator>(const Polynomial& a, const Polynomial& b);
@@ -141,47 +153,13 @@ int getInverseElement(int a, int N) {
 }
 
 /*
-  Определяет, равны ли полиномы a и b.
-*/
-bool polynomialEqual(Polynomial const& a, Polynomial const& b)
-{
-    if (a.monomials.size() != b.monomials.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < a.monomials.size(); ++i) {
-        if (!(a.monomials[i] == b.monomials[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool basisEqual(PolynomialBasis const& a, PolynomialBasis const& b)
-{
-    if (a.polynomials.size() != b.polynomials.size()) {
-        return false;
-    }
-    for (size_t i = 0; i < a.polynomials.size(); ++i) {
-        if (!polynomialEqual(a.polynomials[i], b.polynomials[i])) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool isMonomialGreater(Monomial const& a, Monomial const& b)
-{
-    return a > b;
-}
-
-/*
   Определяет, отсортированы ли одночлены polynomial по убыванию.
   Для этого необходимо, чтобы одночлены должны быть приведены.
 */
 bool isSorted(Polynomial const& polynomial)
 {
     for (size_t i = 0; i + 1 < polynomial.monomials.size(); ++i) {
-        if (!isMonomialGreater(polynomial.monomials[i], polynomial.monomials[i + 1])) {
+        if (!(polynomial.monomials[i] > polynomial.monomials[i + 1])) {
             return false;
         }
     }
@@ -208,8 +186,8 @@ bool isSorted(PolynomialBasis const& basis)
     for (size_t i = 0; i + 1 < basis.polynomials.size(); ++i) {
         auto current = basis.polynomials[i];
         auto next = basis.polynomials[i + 1];
-        if (!isPolynomialGreater(current, next) &&
-            !polynomialEqual(current, next)) {
+        if (!(current > next) &&
+            current != next) {
             return false;
         }
     }
@@ -277,7 +255,7 @@ Polynomial multiplyByNormalisedMonomial(Polynomial const& polynomial, Monomial c
 
 void sortPolynomial(Polynomial& polynomial)
 {
-    std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), isMonomialGreater);
+    std::sort(polynomial.monomials.begin(), polynomial.monomials.end(), std::greater<>());
 }
 
 void sortPolynomialBasis(PolynomialBasis& basis)
@@ -582,22 +560,22 @@ bool isGrobnerBasis(PolynomialBasis const& initialBasis,
 void testNegate()
 {
     auto poly1 = Polynomial{ {} };
-    assert(polynomialEqual(negate(poly1, 7), poly1));
+    assert(negate(poly1, 7) == poly1);
     auto poly2 = Polynomial("a^2*b^3 + 4*a^2*b^2", 2);
     auto poly3 = Polynomial("6*a^2*b^3 + 3*a^2*b^2", 2);
-    assert(polynomialEqual(negate(poly2, 7), poly3));
+    assert(negate(poly2, 7) == poly3);
 }
 
 void testIsMonomialLess()
 {
     auto monomial1 = Monomial("a^2*b^3", 2);
     auto monomial2 = Monomial("a^2*b^2", 2);
-    assert(isMonomialGreater(monomial1, monomial2));
-    assert(!isMonomialGreater(monomial2, monomial1));
+    assert(monomial1 > monomial2);
+    assert(!(monomial2 > monomial1));
     auto monomial3 = Monomial("a^2*b^3", 2);
     auto monomial4 = Monomial("a^1*b^5", 2);
-    assert(isMonomialGreater(monomial3, monomial4));
-    assert(!isMonomialGreater(monomial4, monomial3));
+    assert(monomial3 > monomial4);
+    assert(!(monomial4 > monomial3));
 }
 
 void testIsSorted()
@@ -633,21 +611,21 @@ void testMultiplyByNormalisedMonomial()
     auto monomial1 = Monomial("a^1*b^1", 2);
     auto expected1 = Polynomial("a^2*b^5", 2);
     auto result1 = multiplyByNormalisedMonomial(polynomial1, monomial1);
-    assert(polynomialEqual(result1, expected1));
+    assert(result1 == expected1);
     auto polynomial2 = Polynomial("a^3*b^4 + a^1*b^2", 2);
     auto expected2 = Polynomial("a^4*b^5 + a^2*b^3", 2);
     auto result2 = multiplyByNormalisedMonomial(polynomial2, monomial1);
-    assert(polynomialEqual(result2, expected2));
+    assert(result2 == expected2);
     auto polynomial3 = Polynomial("1", 2);
     auto monomial3 = Monomial("1", 2);
     auto expected3 = Polynomial("1", 2);
     auto result3 = multiplyByNormalisedMonomial(polynomial3, monomial3);
-    assert(polynomialEqual(result3, expected3));
+    assert(result3 == expected3);
     auto polynomial4 = Polynomial{ {} };
     auto monomial4 = Monomial("a^5", 2);
     auto expected4 = Polynomial{ {} };
     auto result4 = multiplyByNormalisedMonomial(polynomial4, monomial4);
-    assert(polynomialEqual(result4, expected4));
+    assert(result4 == expected4);
 }
 
 void testGenerateRandomSortedPolynomial()
@@ -668,43 +646,43 @@ void testSubtract()
 {
     auto poly1 = Polynomial();
     subtract(poly1, { {} }, 7);
-    assert(polynomialEqual(poly1, { {} }));
+    assert(poly1 == Polynomial{ {} });
 
     auto poly2 = Polynomial();
     subtract(poly2, { "5*a^2*b^3", 2 }, 7);
-    assert(polynomialEqual(poly2, { "2*a^2*b^3", 2 }));
+    assert(poly2 == Polynomial( "2*a^2*b^3", 2 ));
 
     auto poly3 = Polynomial("5*a^2*b^3", 2);
     subtract(poly3, { {} }, 7);
-    assert(polynomialEqual(poly3, { "5*a^2*b^3", 2 }));
+    assert(poly3 == Polynomial( "5*a^2*b^3", 2 ));
 
     auto poly4 = Polynomial("5*a^2*b^3", 2);
     subtract(poly4, { "2*a^2*b^3", 2 }, 7);
-    assert(polynomialEqual(poly4, { "3*a^2*b^3", 2 }));
+    assert(poly4 == Polynomial( "3*a^2*b^3", 2 ));
 
     auto poly5 = Polynomial("5*a^2*b^3", 2);
     subtract(poly5, { "5*a^2*b^3", 2 }, 7);
-    assert(polynomialEqual(poly5, { {} }));
+    assert(poly5 == Polynomial());
 
     auto poly6 = Polynomial("2*a^2*b^3", 2);
     subtract(poly6, { "3*a^2*b^3", 2 }, 7);
-    assert(polynomialEqual(poly6, { "6*a^2*b^3", 2 }));
+    assert(poly6 == Polynomial( "6*a^2*b^3", 2 ));
 
     auto poly7 = Polynomial("a^3*b^3", 2);
     subtract(poly7, { "a^2*b^2", 2 }, 5);
-    assert(polynomialEqual(poly7, { "a^3*b^3 + 4*a^2*b^2", 2 }));
+    assert(poly7 == Polynomial( "a^3*b^3 + 4*a^2*b^2", 2 ));
 
     auto poly8 = Polynomial("a^2*b^2", 2);
     subtract(poly8, { "a^3*b^3", 2 }, 5);
-    assert(polynomialEqual(poly8, { "4*a^3*b^3 + a^2*b^2", 2 }));
+    assert(poly8 == Polynomial( "4*a^3*b^3 + a^2*b^2", 2 ));
 
     auto poly9 = Polynomial("2*a^4*b^4 + 3*a^2*b^2", 2);
     subtract(poly9, { "4*a^3*b^3 + 3*a^1*b^1", 2 }, 5);
-    assert(polynomialEqual(poly9, { "2*a^4*b^4 + a^3*b^3 + 3*a^2*b^2 + 2*a^1*b^1", 2 }));
+    assert(poly9 == Polynomial( "2*a^4*b^4 + a^3*b^3 + 3*a^2*b^2 + 2*a^1*b^1", 2 ));
 
     auto poly10 = Polynomial("a^1*b^2", 2);
     subtract(poly10, { "a^2*b^1", 2 }, 5);
-    assert(polynomialEqual(poly10, { "4*a^2*b^1 + a^1*b^2", 2 }));
+    assert(poly10 == Polynomial( "4*a^2*b^1 + a^1*b^2", 2 ));
 }
 
 void testMultipliedByMonomial()
@@ -713,25 +691,25 @@ void testMultipliedByMonomial()
     auto monomial0 = Monomial("1", 2);
     auto expected0 = Polynomial("1", 2);
     auto result0 = multipliedByMonomial(poly0, monomial0, 5);
-    assert(polynomialEqual(expected0, result0));
+    assert(expected0 == result0);
 
     auto poly1 = Polynomial("a^1*b^4", 2);
     auto monomial1 = Monomial("a^1*b^1", 2);
     auto expected1 = Polynomial("a^2*b^5", 2);
     auto result1 = multipliedByMonomial(poly1, monomial1, 5);
-    assert(polynomialEqual(expected1, result1));
+    assert(expected1 == result1);
 
     auto poly2 = Polynomial("a^3*b^4 + a^1*b^2", 2);
     auto monomial2 = Monomial("a^1*b^1", 2);
     auto expected2 = Polynomial("a^4*b^5 + a^2*b^3", 2);
     auto result2 = multipliedByMonomial(poly2, monomial2, 5);
-    assert(polynomialEqual(expected2, result2));
+    assert(expected2 == result2);
 
     auto poly3 = Polynomial("a^1*b^1", 2);
     auto monomial3 = Monomial("2", 2);
     auto expected3 = Polynomial("2*a^1*b^1", 2);
     auto result3 = multipliedByMonomial(poly3, monomial3, 5);
-    assert(polynomialEqual(expected3, result3));
+    assert(expected3 == result3);
 }
 
 void testGetReducedPolynomial()
@@ -739,25 +717,25 @@ void testGetReducedPolynomial()
     auto poly0 = Polynomial();
     auto poly1 = Polynomial("1", 1);
     auto result1 = getReducedPolynomial(poly1, { { poly1 } }, 7);
-    assert(polynomialEqual(result1, poly0));
+    assert(result1 == poly0);
 
     auto poly2 = Polynomial("a^1", 1);
     auto result2 = getReducedPolynomial(poly2, { { poly1 } }, 7);
-    assert(polynomialEqual(result2, poly0));
+    assert(result2 == poly0);
 
     auto poly3 = Polynomial("a^2", 1);
     auto poly4 = Polynomial("a^5", 1);
     auto result3 = getReducedPolynomial(poly4, { { poly3 } }, 7);
-    assert(polynomialEqual(result3, poly0));
+    assert(result3 == poly0);
 
     auto result4 = getReducedPolynomial(poly3, { { poly4 } }, 7);
-    assert(polynomialEqual(result4, poly3));
+    assert(result4 == poly3);
 
     auto poly5 = Polynomial("a^1 + b^1", 2);
     auto poly6 = Polynomial("a^1", 2);
     auto poly7 = Polynomial("b^1", 2);
     auto result5 = getReducedPolynomial(poly6, { { poly5 } }, 7);
-    assert(polynomialEqual(result5, poly7));
+    assert(result5 == poly7);
 
     auto poly8 = Polynomial("b^1 + c^1", 3);
     auto poly9 = Polynomial("a^1 + b^1", 3);
@@ -766,34 +744,34 @@ void testGetReducedPolynomial()
     auto basis0 = PolynomialBasis{ { poly8, poly9 } };
     sortPolynomialBasis(basis0);
     auto result6 = getReducedPolynomial(poly10, basis0, 7);
-    assert(polynomialEqual(result6, poly11));
+    assert(result6 == poly11);
 
     auto result7 = getReducedPolynomial(poly8, basis0, 7);
-    assert(polynomialEqual(result7, { {} }));
+    assert(result7 == Polynomial());
 
     auto poly12 = Polynomial("3*a^1", 2);
     auto poly13 = Polynomial("b^1", 2);
     auto result8 = getReducedPolynomial(poly12, { { poly5 } }, 7);
-    assert(polynomialEqual(result8, poly13));
+    assert(result8 == poly13);
 }
 
 void testGetPolynomialWithEliminatedMajorMonomials()
 {
     auto result1 = getPolynomialWithEliminatedMajorMonomials(
         { "1", 1 }, { "1", 1 }, 7);
-    assert(polynomialEqual(result1, { {} }));
+    assert(result1 == Polynomial());
 
     auto result2 = getPolynomialWithEliminatedMajorMonomials(
         { "a^1", 2 }, { "b^1", 2 }, 7);
-    assert(polynomialEqual(result2, { {} }));
+    assert(result2 == Polynomial());
 
     auto result3 = getPolynomialWithEliminatedMajorMonomials(
         { "a^1 + b^1", 2 }, { "a^1", 2 }, 7);
-    assert(polynomialEqual(result3, { "b^1", 2 }));
+    assert(result3 == Polynomial( "b^1", 2 ));
 
     auto result4 = getPolynomialWithEliminatedMajorMonomials(
         { "a^1", 2 }, { "a^1 + b^1", 2 }, 7);
-    assert(polynomialEqual(result4, { "6*b^1", 2 }));
+    assert(result4 == Polynomial( "6*b^1", 2 ));
 }
 
 void testGetGrobnerBasis(size_t nVariables, size_t nPolynomials, int maxVariableDegree,
@@ -814,7 +792,7 @@ void testSortPolynomialBasis()
     auto basis = PolynomialBasis{ { poly1, poly2 } };
     sortPolynomialBasis(basis);
     auto expected = PolynomialBasis{ { poly2, poly1 } };
-    assert(basisEqual(basis, expected));
+    assert(basis == expected);
 }
 
 void testGetFirstNotZeroSPolynomial_1()
@@ -824,7 +802,7 @@ void testGetFirstNotZeroSPolynomial_1()
     auto basis = PolynomialBasis{ { poly1, poly2 } };
     auto result = getFirstNotZeroSPolynomial(basis, 3);
     auto expected = Polynomial("a^1 + 2*b^2", 2);
-    assert(polynomialEqual(result, expected));
+    assert(result == expected);
 }
 
 void testGetGrobnerBasis()
@@ -849,7 +827,7 @@ void testAll()
     testGetPolynomialWithEliminatedMajorMonomials();
     testSortPolynomialBasis();
     testGetFirstNotZeroSPolynomial_1();
-    // testGetGrobnerBasis();
+    testGetGrobnerBasis();
 }
 
 int main(void)
