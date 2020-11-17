@@ -178,7 +178,7 @@ bool operator>(const Polynomial &a, const Polynomial &b) {
   assert(isSorted(a));
   assert(isSorted(b));
   for (size_t i = 0; i < a.monomials.size(); ++i) {
-    if (a.monomials[i] > b.monomials[i]) {
+    if (i == b.monomials.size() || a.monomials[i] > b.monomials[i]) {
       return true;
     }
     else if (b.monomials[i] > a.monomials[i]) {
@@ -767,10 +767,20 @@ void testGetFirstNotZeroSPolynomial_1() {
   assert(result == expected);
 }
 
+void testGetFirstNotZeroSPolynomial_2() {
+  auto poly1 = Polynomial("a^1*b^2 + 2*a^1*b^1", 2);
+  auto poly2 = Polynomial("a^1*b^2", 2);
+  auto basis = PolynomialBasis{ {poly1, poly2} };
+  auto result = getFirstNotZeroSPolynomial(basis, 3);
+  auto expected = Polynomial("a^1*b^1", 2);
+  assert(result == expected);
+}
+
 void testGetGrobnerBasis() {
   srand(0);
   // nVariables, nPolynomials, maxVariableDegree, maxNMonomials, prime,
-  // nIterations testGetGrobnerBasis(1, 1, 1, 1, 2, 10);
+  // nIterations 
+  testGetGrobnerBasis(1, 1, 1, 1, 2, 10);
   testGetGrobnerBasis(2, 2, 2, 2, 3, 100);
 }
 
@@ -787,6 +797,7 @@ void testAll() {
   testGetPolynomialWithEliminatedMajorMonomials();
   testSortPolynomialBasis();
   testGetFirstNotZeroSPolynomial_1();
+  testGetFirstNotZeroSPolynomial_2();
   testGetGrobnerBasis();
 }
 
