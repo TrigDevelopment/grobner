@@ -350,6 +350,15 @@ void subtract(Polynomial &polynomial1, Polynomial const &polynomial2,
   polynomial1 = addPolynomials(polynomial1, negate(polynomial2, prime), prime);
 }
 
+void deleteZeroMonomials(Polynomial &polynomial) {
+  for (size_t monomialI = 0; monomialI < polynomial.monomials.size();
+     ++monomialI) {
+     if (polynomial.monomials[monomialI].coefficient == 0) {
+       polynomial.monomials.erase(polynomial.monomials.begin() + monomialI);
+    }
+  }
+}
+
 Polynomial multipliedByCoefficient(Polynomial const &polynomial,
   int coefficient, int prime) {
   auto res = polynomial;
@@ -357,10 +366,8 @@ Polynomial multipliedByCoefficient(Polynomial const &polynomial,
     ++monomialI) {
     res.monomials[monomialI].coefficient *= coefficient;
     mod(res.monomials[monomialI].coefficient, prime);
-    if (res.monomials[monomialI].coefficient == 0) {
-      res.monomials.erase(res.monomials.begin() + monomialI);
-    }
   }
+  deleteZeroMonomials(res);
   return res;
 }
 
@@ -774,6 +781,12 @@ void testGetGrobnerBasis() {
   testGetGrobnerBasis(2, 2, 2, 2, 3, 100);
 }
 
+void testMultipliedByCoefficient() {
+  auto poly = Polynomial("2*a^1 + b^1", 2);
+  auto res = multipliedByCoefficient(poly, 0, 7);
+  assert(res == Polynomial());
+}
+
 void testAll() {
   testNegate();
   testIsMonomialLess();
@@ -788,6 +801,7 @@ void testAll() {
   testSortPolynomialBasis();
   testGetFirstNotZeroSPolynomial_1();
   testGetGrobnerBasis();
+  testMultipliedByCoefficient();
 }
 
 int main(void) {
