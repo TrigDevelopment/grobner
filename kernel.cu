@@ -533,7 +533,16 @@ bool isGrobnerBasis(PolynomialBasis const &initialBasis,
   for (int i = 0; i < 100; ++i) {
     auto polynomialFromIdeal =
       generateRandomPolynomialFromIdeal(initialBasis, prime);
+    
     if (!isGrobnerForPolynomial(grobnerBasis, polynomialFromIdeal)) {
+      std::cout << std::endl;
+      std::cout << std::endl;
+      std::cout << std::endl;
+      outputPolynomial(polynomialFromIdeal);
+      std::cout << std::endl;
+      outputPolynomialBasis(initialBasis);
+      std::cout << std::endl;
+      outputPolynomialBasis(grobnerBasis);
       return false;
     }
   }
